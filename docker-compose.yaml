@@ -1,0 +1,82 @@
+version: '3.3'
+services:
+# -------------------------- serveur CA  --------------------------------
+  server_CA:
+    image: breizhland/easy-rsa:latest
+#    image: lscr.io/linuxserver/openssh-server:latest
+    container_name: server_CA
+    hostname: server_CA
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SUDO_ACCESS=false
+      - PASSWORD_ACCESS=truel
+      - USER_PASSWORD=password123
+      - USER_NAME=test_user_1
+    volumes:
+      - ./server_CA/ssh_config:/config:rw
+      - ./server_CA/PKI:/data:rw
+    ports:
+      - 2222
+    restart: unless-stopped
+    networks:
+      int_net_h1:
+        ipv4_address: 192.168.10.10
+# ------------------------ serveur CA Intermédiaire  ----------------------------
+  server_SubCA:
+    image: breizhland/easy-rsa:latest
+#    image: lscr.io/linuxserver/openssh-server:latest
+    container_name: server_SubCA
+    hostname: server_SubCA
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SUDO_ACCESS=false
+      - PASSWORD_ACCESS=truel
+      - USER_PASSWORD=password123
+      - USER_NAME=test_user_2
+    volumes:
+      - ./server_subCA/ssh_config:/config:rw
+      - ./server_subCA/PKI:/data:rw
+    ports:
+      - 2222
+    restart: unless-stopped
+    networks:
+      int_net_h1:
+        ipv4_address: 192.168.10.20
+# ------------------------ serveur client SubCA  --------------------------------
+  server_3:
+    image: breizhland/easy-rsa:latest
+#    image: lscr.io/linuxserver/openssh-server:latest
+    container_name: server_3
+    hostname: server_3 #optional
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SUDO_ACCESS=false #optional
+      - PASSWORD_ACCESS=true #optional
+      - USER_PASSWORD=password123 #optional
+      - USER_NAME=test_user_3 #optional
+    volumes:
+      - ./server3/ssh_config:/config:rw
+      - ./server3/PKI:/data:rw
+    ports:
+      - 2222
+    restart: unless-stopped
+    networks:
+      int_net_h1:
+        ipv4_address: 192.168.10.30
+# ------------------------ Definition des reseaux  ----------------------------
+networks:
+  int_net_h1:
+    name: pki_int_h1
+    driver: bridge
+    internal: true
+    attachable: true
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24
+          gateway: 192.168.10.254
